@@ -7,5 +7,5 @@ A small utility that allows you to organize cool parties with minimal effort.
 
 Features:
 - API for creating your own scenes
-- Automatic scene management (start, switch and stop)
-- Common resource management (video projector and room lighting)
+- Automatic scene management (start, switch & stop)
+- Shared resource management (video projector & room lighting)
