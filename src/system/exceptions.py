@@ -1,0 +1,2 @@
+class IllegalState(Exception):
+    pass
