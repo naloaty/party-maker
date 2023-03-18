@@ -1,5 +1,5 @@
-from .Background import VideoItem
-from system.display import Media
+from .background import VideoItem
+from system.services.projector import Media
 
 
 LIBRARY = [

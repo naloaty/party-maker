@@ -22,16 +22,19 @@ class Lighting:
     _bulb: PyL530
 
     def __init__(self, ip: str, login: str, password: str):
-        self._bulb = PyL530.L530(ip, login, password)
-        self._bulb.handshake()
-        self._bulb.login()
+        #self._bulb = PyL530.L530(ip, login, password)
+        #self._bulb.handshake()
+        #self._bulb.login()
+        #self.set(Light(Light.Type.COLOR, 100, hue=249, saturation=87))
+        pass
 
     def set(self, light: Light):
-        if light.type is Light.Type.TEMP:
-            self._bulb.setColorTemp(light.temperature)
-        elif light.type is Light.Type.COLOR:
-            self._bulb.setColor(light.hue, light.saturation)
-        self._bulb.setBrightness(light.brightness)
+        # if light.type is Light.Type.TEMP:
+        #     self._bulb.setColorTemp(light.temperature)
+        # elif light.type is Light.Type.COLOR:
+        #     self._bulb.setColor(light.hue, light.saturation)
+        # self._bulb.setBrightness(light.brightness)
+        pass
 
     def state(self):
         info = self._bulb.getDeviceInfo()["result"]

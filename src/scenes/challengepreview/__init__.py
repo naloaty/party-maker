@@ -1,1 +1,1 @@
-from .ChallengePreview import ChallengePreview
+from .challenge_preview import ChallengePreview

@@ -1,14 +1,14 @@
 import asyncio
 from dataclasses import dataclass, asdict
-from typing import List, Optional
+from typing import Optional
 
 from PyQt6.QtCore import QItemSelection, pyqtSlot
 from PyQt6.QtWidgets import QDialog, QHeaderView
-from models import AnyDictTableModel, SimpleColumn
-from system.display import Media
-from system.lighting import Light
+from system.qt import AnyDictTableModel, SimpleColumn
+from system.services.projector import Media
+from system.services.lighting import Light
 from system.scene import Scene, ActionManager
-from .ChallengePreviewUI import Ui_ChallengePreview
+from .challenge_preview_ui import Ui_ChallengePreview
 
 
 # neutral white

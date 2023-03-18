@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog
 from vlc import Instance, EventType, Event
 
-from system.MediaDisplayUI import Ui_MediaDisplay
+from system.services.projector.projector_ui import Ui_MediaDisplay
 
 
 @dataclass
@@ -16,7 +16,7 @@ class Media:
     path: str
 
 
-class MediaDisplay(QDialog):
+class Projector(QDialog):
     fullscreen: bool = False
 
     def __init__(self):
@@ -62,7 +62,7 @@ class MediaDisplay(QDialog):
         self._player.set_media(self._vlc.media_new(media.path))
         self.init_frame()
         self._player.play()
-        self.showFullScreen()
+        # self.showFullScreen()
         await asyncio.sleep(1)
         while self._player.is_playing():
             await asyncio.sleep(1)

@@ -1,5 +1,5 @@
-from .ChallengePreview import VideoItem
-from system.display import Media
+from .challenge_preview import VideoItem
+from system.services.projector import Media
 
 LIBRARY = [
     VideoItem("Буря в бокале", Media("D:/NotGames/Одиночные/Буря в бокале.mp4")),

@@ -1,7 +1,7 @@
 from typing import Any
 from PyQt6.QtCore import Qt, QModelIndex, QVariant
 
-from .AnyDictTableModel import AbstractColumn
+from .any_dict_table_model import AbstractColumn
 
 
 class SimpleColumn(AbstractColumn):

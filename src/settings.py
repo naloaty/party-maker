@@ -1,4 +1,4 @@
-from system.lighting import Light
+from system.services.lighting import Light
 
 # TP-Link Tapo L530E
 bulb_settings = {

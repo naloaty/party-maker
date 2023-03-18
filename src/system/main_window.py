@@ -1,17 +1,16 @@
 from dataclasses import asdict
-from typing import Union, Optional
-
+from typing import Optional
 from PyQt6 import QtGui
 from PyQt6.QtCore import QItemSelection, pyqtSlot
 from PyQt6.QtWidgets import QMainWindow, QHeaderView
+from .main_window_ui import Ui_ScenesWindow
+from system.qt import AnyDictTableModel
+from system.qt import SimpleColumn
+from system.scene import SceneManager
+from system.scene import Scene
 
-from ScenesWindowUI import Ui_ScenesWindow
-from models.AnyDictTableModel import AnyDictTableModel
-from models.SimpleColumn import SimpleColumn
-from system.scene import Scene, SceneManager
 
-
-class ScenesWindow(QMainWindow):
+class MainWindow(QMainWindow):
 
     def __init__(self, manager: SceneManager):
         super().__init__()

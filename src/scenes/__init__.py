@@ -4,7 +4,8 @@ from .challengepreview import ChallengePreview
 from .testscene import TestScene
 
 scenes = [
+    TestScene,
+    ActiveChallenge,
     Background,
-    ChallengePreview,
-    ActiveChallenge
+    ChallengePreview
 ]

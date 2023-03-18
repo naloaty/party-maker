@@ -1,1 +1,1 @@
-from .ActiveChallenge import ActiveChallenge
+from .active_challenge import ActiveChallenge
