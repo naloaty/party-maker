@@ -1,8 +1,10 @@
 import asyncio
+
 from PyQt6.QtWidgets import QDialog
-from system.services.projector import Media, Projector
+
+from system.scene import Scene, action
 from system.services.lighting import Light
-from system.scene import Scene, ActionManager
+from system.services.projector import Media, Projector
 from .active_challenge_ui import Ui_ActiveChallenge
 
 USUAL_GAME = Media("D:/NotGames/Обычное испытание.mp4")
@@ -40,20 +42,38 @@ class ActiveChallenge(Scene, QDialog):
     # ===== Buttons =====
 
     def on_start_click(self):
-        self.run_action(self.game_in_progress(), self.game_finished)
+        self.run_action(self.game_in_progress())
 
     def on_stop_click(self):
-        self.run_action(self.game_interrupted(), None)
+        self.run_action(self.game_interrupted())
 
     def on_success_click(self):
-        self.run_action(self.game_succeeded(), self.game_finished)
+        self.run_action(self.game_succeeded())
 
     def on_fail_click(self):
-        self.run_action(self.game_failed(), self.game_finished)
+        self.run_action(self.game_failed())
 
     # ===== Actions =====
 
-    @ActionManager.action
+    async def game_finished(self, reason: Scene.StopReason):
+        stage = self.context.get_stage()
+
+        _return = reason == Scene.StopReason.Return
+        _local = reason == Scene.StopReason.LocalIntercept
+        _external = reason == Scene.StopReason.ExternalIntercept
+        _stop = reason == Scene.StopReason.SceneStop
+
+        if _stop or _external:
+            stage.display.stop()
+
+        self.ui.btn_start.setEnabled(True)
+        self.ui.btn_stop.setEnabled(False)
+        self.ui.btn_fail.setEnabled(False)
+        self.ui.btn_success.setEnabled(False)
+        stage.lighting.set(DEFAULT_LIGHT)
+        stage.display.reset()
+
+    @action(game_finished)
     async def game_in_progress(self):
         stage = self.context.get_stage()
         self.ui.btn_start.setEnabled(False)
@@ -93,25 +113,7 @@ class ActiveChallenge(Scene, QDialog):
                 Light.Type.COLOR, hue=0, saturation=100, brightness=100))
             await asyncio.sleep(5)
 
-    async def game_finished(self, reason: Scene.StopReason):
-        stage = self.context.get_stage()
-
-        _return = reason == Scene.StopReason.Return
-        _local = reason == Scene.StopReason.LocalIntercept
-        _external = reason == Scene.StopReason.ExternalIntercept
-        _stop = reason == Scene.StopReason.SceneStop
-
-        if _stop or _external:
-            stage.display.stop()
-
-        self.ui.btn_start.setEnabled(True)
-        self.ui.btn_stop.setEnabled(False)
-        self.ui.btn_fail.setEnabled(False)
-        self.ui.btn_success.setEnabled(False)
-        stage.lighting.set(DEFAULT_LIGHT)
-        stage.display.reset()
-
-    @ActionManager.action
+    @action(game_finished)
     async def game_succeeded(self):
         stage = self.context.get_stage()
         stage.display.pause()
@@ -120,7 +122,7 @@ class ActiveChallenge(Scene, QDialog):
         await asyncio.create_task(Projector().play(SUCCESS))
         await asyncio.sleep(8)
 
-    @ActionManager.action
+    @action(game_finished)
     async def game_failed(self):
         stage = self.context.get_stage()
         stage.display.pause()
@@ -129,7 +131,7 @@ class ActiveChallenge(Scene, QDialog):
             Light.Type.COLOR, hue=0, saturation=100, brightness=100))
         await asyncio.sleep(8)
 
-    @ActionManager.action
+    @action()
     async def game_interrupted(self):
         stage = self.context.get_stage()
         stage.display.stop()

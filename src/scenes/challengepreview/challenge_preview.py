@@ -4,15 +4,16 @@ from typing import Optional
 
 from PyQt6.QtCore import QItemSelection, pyqtSlot
 from PyQt6.QtWidgets import QDialog, QHeaderView
-from system.qt import AnyDictTableModel, SimpleColumn
-from system.services.projector import Media
-from system.services.lighting import Light
-from system.scene import Scene, ActionManager
-from .challenge_preview_ui import Ui_ChallengePreview
 
+from system.qt import AnyDictTableModel, SimpleColumn
+from system.scene import Scene, action
+from system.services.lighting import Light
+from system.services.projector import Media
+from .challenge_preview_ui import Ui_ChallengePreview
 
 # neutral white
 DEFAULT_LIGHT = Light(Light.Type.TEMP, temperature=3620, brightness=100)
+
 
 @dataclass
 class VideoItem:
@@ -80,13 +81,13 @@ class ChallengePreview(Scene, QDialog):
     def on_start_click(self):
         item_id = self.get_selected_item()
         if item_id is not None:
-            self.run_action(self.play_item(item_id), self.on_stop_playing)
+            self.run_action(self.play_item(item_id))
 
     def on_pause_click(self):
-        self.run_action(self.set_pause(), None)
+        self.run_action(self.set_pause())
 
     def on_stop_click(self):
-        self.run_action(self.stop_playing(), None)
+        self.run_action(self.stop_playing())
 
     def on_stop(self):
         self.hide()
@@ -94,7 +95,13 @@ class ChallengePreview(Scene, QDialog):
     def reject(self) -> None:
         self.stop()
 
-    @ActionManager.action
+    async def on_stop_playing(self, reason: Scene.StopReason):
+        stage = self.context.get_stage()
+        stage.lighting.set(DEFAULT_LIGHT)
+        if reason != Scene.StopReason.LocalIntercept:
+            stage.display.stop()
+
+    @action(on_stop_playing)
     async def play_item(self, item_id: int):
         stage = self.context.get_stage()
         await stage.display.play(OPENING)
@@ -111,7 +118,7 @@ class ChallengePreview(Scene, QDialog):
         self.ui.btn_stop.setEnabled(True)
         await task
 
-    @ActionManager.action
+    @action()
     async def stop_playing(self):
         stage = self.context.get_stage()
         stage.display.stop()
@@ -122,13 +129,7 @@ class ChallengePreview(Scene, QDialog):
         self.ui.btn_pause.setEnabled(False)
         self.ui.btn_stop.setEnabled(False)
 
-    async def on_stop_playing(self, reason: Scene.StopReason):
-        stage = self.context.get_stage()
-        stage.lighting.set(DEFAULT_LIGHT)
-        if reason != Scene.StopReason.LocalIntercept:
-            stage.display.stop()
-
-    @ActionManager.action
+    @action()
     async def set_pause(self):
         stage = self.context.get_stage()
         item = self._items[self._current_item]

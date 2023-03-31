@@ -4,9 +4,10 @@ from typing import Optional
 
 from PyQt6.QtCore import QItemSelection, pyqtSlot
 from PyQt6.QtWidgets import QDialog, QHeaderView
+
 from system.qt import AnyDictTableModel, SimpleColumn
+from system.scene import Scene, action
 from system.services.projector import Media
-from system.scene import Scene, ActionManager
 from .background_ui import Ui_Background
 
 
@@ -18,7 +19,12 @@ class VideoItem:
     id: int = -1
 
 
-from .settings import LIBRARY
+LIBRARY = [
+    VideoItem("Лавовая лампа", Media("D:/Background/Bubbles.mp4")),
+    VideoItem("Лазер", Media("D:/Background/NeonTunnel.mp4")),
+    VideoItem("Облака в воде", Media("D:/Background/InkWater.mp4")),
+    VideoItem("Пираты карибского моря", Media("D:/NotGames/src/pirates.mp4"))
+]
 
 
 class Background(Scene, QDialog):
@@ -73,10 +79,10 @@ class Background(Scene, QDialog):
     def on_start_click(self):
         item_id = self.get_selected_item()
         if item_id is not None:
-            self.run_action(self.play_item(item_id), self.on_stop_playing)
+            self.run_action(self.play_item(item_id))
 
     def on_stop_click(self):
-        self.run_action(self.stop_playing(), None)
+        self.run_action(self.stop_playing())
 
     def on_stop(self):
         self.hide()
@@ -84,7 +90,16 @@ class Background(Scene, QDialog):
     def reject(self) -> None:
         self.stop()
 
-    @ActionManager.action
+    async def on_stop_playing(self, reason: Scene.StopReason):
+        stage = self.context.get_stage()
+        item = self._items[self._current_item]
+        item.time = stage.display.get_position()
+        if reason != Scene.StopReason.LocalIntercept:
+            stage.display.stop()
+        self.model.updateRecord(asdict(item))
+        self.ui.btn_stop.setEnabled(False)
+
+    @action(on_stop_playing)
     async def play_item(self, item_id: int):
         stage = self.context.get_stage()
         self._current_item = item_id
@@ -96,16 +111,7 @@ class Background(Scene, QDialog):
         await task
         self.ui.btn_stop.setEnabled(False)
 
-    async def on_stop_playing(self, reason: Scene.StopReason):
-        stage = self.context.get_stage()
-        item = self._items[self._current_item]
-        item.time = stage.display.get_position()
-        if reason != Scene.StopReason.LocalIntercept:
-            stage.display.stop()
-        self.model.updateRecord(asdict(item))
-        self.ui.btn_stop.setEnabled(False)
-
-    @ActionManager.action
+    @action()
     async def stop_playing(self):
         stage = self.context.get_stage()
         stage.display.stop()

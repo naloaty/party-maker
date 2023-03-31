@@ -51,8 +51,7 @@ class Scene:
     def set_context(self, api: "SceneContext"):
         self.context = api
 
-    def run_action(self, action: "ActionContext", callback: Optional["ActionContext.Callback"]):
+    def run_action(self, action: "ActionContext"):
         if self.context is None:
             raise IllegalState("Could not run action because Context is None")
-        action.callback = callback
         self.context.manager.run_action(action)
