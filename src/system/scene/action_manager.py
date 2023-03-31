@@ -1,40 +1,22 @@
 from __future__ import annotations
-from typing import Callable, Coroutine, Optional, TYPE_CHECKING
-import asyncio
-import inspect
-from system.misc.exceptions import IllegalState
-from .scene import Scene
-from .action_context import ActionContext
-from .stage import Stage
 
+import asyncio
+from typing import Coroutine, Optional, TYPE_CHECKING
+
+from system.misc.exceptions import IllegalState
+from .action_context import ActionContext
+from .scene import Scene
+from .stage import Stage
 
 if TYPE_CHECKING:
     from .scene_manager import SceneManager
 
 
 class ActionManager:
-    _scene_manager: "SceneManager"
+    _scene_manager: SceneManager
 
-    def __init__(self, manager: "SceneManager"):
+    def __init__(self, manager: SceneManager):
         self._scene_manager = manager
-
-    @staticmethod
-    def action(func: Callable) -> Callable:
-        if not inspect.iscoroutinefunction(func):
-            raise RuntimeError("The @action decorator can only be applied "
-                               "to async functions")
-
-        def wrapper(*args, **kwargs) -> ActionContext:
-            if len(args) == 0:
-                raise RuntimeError("The @action decorator can only be applied "
-                                   "to methods of the class")
-            scene: Scene = args[0]
-            if not isinstance(scene, Scene):
-                raise RuntimeError("The @action decorator can only be applied "
-                                   "to methods of the Scene class")
-            return ActionContext(scene.context, func, args, kwargs)
-
-        return wrapper
 
     _current_action: Optional[ActionContext] = None
     _pending_action: Optional[ActionContext] = None
@@ -60,10 +42,10 @@ class ActionManager:
         await self._current_action.join()
         if self._current_action.stop_reason != Scene.StopReason.LocalIntercept:
             if self._current_action.stop_reason == Scene.StopReason.SceneStop:
-                self._current_action.scene.set_state(Scene.State.Stopped)
-                self._current_action.scene.scene.on_stop()
+                self._current_action.scene_context.set_state(Scene.State.Stopped)
+                self._current_action.scene_context.scene.on_stop()
             else:
-                self._current_action.scene.set_state(Scene.State.Idle)
+                self._current_action.scene_context.set_state(Scene.State.Idle)
         self._current_action = None
 
     def _manager_done(self):
@@ -75,7 +57,7 @@ class ActionManager:
 
     async def _execute_action(self, action: ActionContext):
         self._current_action = action
-        action.scene.set_state(Scene.State.Playing)
+        action.scene_context.set_state(Scene.State.Playing)
         action.execute(self._scene_manager.get_stage())
         asyncio.create_task(self._wait_current_action())
 
@@ -86,16 +68,16 @@ class ActionManager:
         reason = Scene.StopReason.SceneStop
 
         if self._pending_action is not None:
-            source = self._current_action.scene.id
-            target = self._pending_action.scene.id
+            source = self._current_action.scene_context.id
+            target = self._pending_action.scene_context.id
             if source == target:
                 reason = Scene.StopReason.LocalIntercept
             else:
-                self._pending_action.scene.set_state(Scene.State.Preparing)
-                self._current_action.scene.set_state(Scene.State.Interrupting)
+                self._pending_action.scene_context.set_state(Scene.State.Preparing)
+                self._current_action.scene_context.set_state(Scene.State.Interrupting)
                 reason = Scene.StopReason.ExternalIntercept
         else:
-            self._current_action.scene.set_state(Scene.State.Interrupting)
+            self._current_action.scene_context.set_state(Scene.State.Interrupting)
         await self._current_action.interrupt(reason)
 
     # ===== Public API =====
@@ -110,9 +92,9 @@ class ActionManager:
 
     async def stop_scene_actions(self, scene_id: int):
         if self._pending_action is not None:
-            if self._pending_action.scene.id == scene_id:
+            if self._pending_action.scene_context.id == scene_id:
                 self._pending_action = None
 
         if self._current_action is not None:
-            if self._current_action.scene.id == scene_id:
+            if self._current_action.scene_context.id == scene_id:
                 self._manager_run(self._interrupt_current_action())
