@@ -9,6 +9,8 @@ from vlc import Instance, EventType, Event
 
 from system.services.projector.projector_ui import Ui_MediaDisplay
 
+from .media import Media
+
 
 class VlcProjector(QDialog):
     fullscreen: bool = False
