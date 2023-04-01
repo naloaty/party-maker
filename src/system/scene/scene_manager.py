@@ -6,20 +6,20 @@ from settings import bulb_settings
 from system.services.projector import Projector
 from system.misc.exceptions import IllegalState
 from system.services.lighting import Lighting
-from .action_manager import ActionManager
+from .action_executor import ActionExecutor
 from .scene_context import SceneContext
 from .scene import Scene
 from .stage import Stage
 
 
 if TYPE_CHECKING:
-    from .action_context import ActionContext
+    from .action_task import ActionTask
 
 
 class SceneManager(QObject):
     _auto_inc: int = 0
     _scenes: dict[int, SceneContext] = dict()
-    _action_manager: ActionManager
+    _action_executor: ActionExecutor
     _display: Projector
     _lighting: Lighting
 
@@ -27,7 +27,7 @@ class SceneManager(QObject):
 
     def __init__(self):
         super().__init__()
-        self._action_manager = ActionManager(self)
+        self._action_executor = ActionExecutor(self)
         self._display = Projector()
         self._lighting = Lighting(**bulb_settings)
         self._display.placeholder()
@@ -70,7 +70,7 @@ class SceneManager(QObject):
         if scene.state == Scene.State.Stopped:
             return
         if scene.state != Scene.State.Idle:
-            asyncio.create_task(self._action_manager.stop_scene_actions(scene.id))
+            asyncio.create_task(self._action_executor.stop_scene_actions(scene.id))
         else:
             scene.scene.on_stop()
             scene.set_state(Scene.State.Stopped)
@@ -78,8 +78,8 @@ class SceneManager(QObject):
     def get_scene_description(self, scene_id: int) -> Scene.Description:
         return self._get_scene(scene_id).get_description()
 
-    def run_action(self, action: ActionContext):
-        self._action_manager.run(action)
+    def run_action(self, action: ActionTask):
+        self._action_executor.execute(action)
 
     def teardown(self):
         for scene_context in self._scenes.values():

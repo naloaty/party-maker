@@ -8,7 +8,7 @@ from system.misc.exceptions import IllegalState
 
 if TYPE_CHECKING:
     from .scene_context import SceneContext
-    from .action_context import ActionContext
+    from .action_task import ActionTask
 
 
 class Scene:
@@ -51,7 +51,7 @@ class Scene:
     def set_context(self, api: "SceneContext"):
         self.context = api
 
-    def run_action(self, action: "ActionContext"):
+    def run_action(self, action: "ActionTask"):
         if self.context is None:
             raise IllegalState("Could not run action because Context is None")
         self.context.manager.run_action(action)

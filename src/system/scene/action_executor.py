@@ -4,7 +4,7 @@ import asyncio
 from typing import Coroutine, Optional, TYPE_CHECKING
 
 from system.misc.exceptions import IllegalState
-from .action_context import ActionContext
+from .action_task import ActionTask
 from .scene import Scene
 from .stage import Stage
 
@@ -12,29 +12,29 @@ if TYPE_CHECKING:
     from .scene_manager import SceneManager
 
 
-class ActionManager:
+class ActionExecutor:
     _scene_manager: SceneManager
 
     def __init__(self, manager: SceneManager):
         self._scene_manager = manager
 
-    _current_action: Optional[ActionContext] = None
-    _pending_action: Optional[ActionContext] = None
-    _manager_task: Optional[asyncio.Task] = None
+    _current_action: Optional[ActionTask] = None
+    _pending_action: Optional[ActionTask] = None
+    _executor_task: Optional[asyncio.Task] = None
     _stage: Optional[Stage] = None
 
     # ===== Internal methods =====
 
-    async def _manager_run_routine(self, routine: Coroutine) -> None:
-        self._manager_task = asyncio.create_task(routine)
-        await self._manager_task
-        self._manager_task = None
-        self._manager_done()
+    async def _executor_run_routine(self, routine: Coroutine) -> None:
+        self._executor_task = asyncio.create_task(routine)
+        await self._executor_task
+        self._executor_task = None
+        self._executor_task_done()
 
-    def _manager_run(self, routine: Coroutine) -> None:
-        if self._manager_task is not None:
+    def _executor_run(self, routine: Coroutine) -> None:
+        if self._executor_task is not None:
             raise IllegalState("Could not run manager task because there is another")
-        asyncio.create_task(self._manager_run_routine(routine))
+        asyncio.create_task(self._executor_run_routine(routine))
 
     async def _wait_current_action(self):
         if self._current_action is None:
@@ -48,14 +48,14 @@ class ActionManager:
                 self._current_action.scene_context.set_state(Scene.State.Idle)
         self._current_action = None
 
-    def _manager_done(self):
+    def _executor_task_done(self):
         if self._pending_action is not None:
-            self._manager_run(self._execute_action(self._pending_action))
+            self._executor_run(self._execute_action(self._pending_action))
             self._pending_action = None
 
     # ===== Action methods =====
 
-    async def _execute_action(self, action: ActionContext):
+    async def _execute_action(self, action: ActionTask):
         self._current_action = action
         action.scene_context.set_state(Scene.State.Playing)
         action.execute(self._scene_manager.get_stage())
@@ -82,13 +82,13 @@ class ActionManager:
 
     # ===== Public API =====
 
-    def run(self, action: ActionContext):
+    def execute(self, action: ActionTask):
         if self._current_action is None:
-            self._manager_run(self._execute_action(action))
+            self._executor_run(self._execute_action(action))
         else:
             self._pending_action = action
-            if self._manager_task is None:
-                self._manager_run(self._interrupt_current_action())
+            if self._executor_task is None:
+                self._executor_run(self._interrupt_current_action())
 
     async def stop_scene_actions(self, scene_id: int):
         if self._pending_action is not None:
@@ -97,4 +97,4 @@ class ActionManager:
 
         if self._current_action is not None:
             if self._current_action.scene_context.id == scene_id:
-                self._manager_run(self._interrupt_current_action())
+                self._executor_run(self._interrupt_current_action())

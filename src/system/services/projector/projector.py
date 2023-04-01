@@ -65,7 +65,7 @@ class Projector(QDialog):
         # self.showFullScreen()
         await asyncio.sleep(1)
         while self._player.is_playing():
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
     def reset(self):
         self._position_locks.clear()

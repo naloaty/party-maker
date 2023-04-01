@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .stage import Stage
 
 
-class ActionContext:
+class ActionTask:
     Callback = Callable[[Scene, Scene.StopReason], Coroutine]
 
     func: Final[Callable]
@@ -20,7 +20,7 @@ class ActionContext:
     stop_reason: Optional[Scene.StopReason] = None
 
     _task: Optional[asyncio.Task] = None
-    _lock: Optional[asyncio.Semaphore] = None
+    _lock: Final[asyncio.Semaphore] = None
     _stage: Optional[Stage] = None
 
     def __init__(self, scene_context: SceneContext, func: Callable, args: tuple, kwargs: dict):
