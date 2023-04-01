@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from system.services.projector import Projector
+from system.services.projector import VlcProjector
 from system.services.lighting import Lighting
 from .resource import Resource
 
 
 @dataclass
 class Stage(Resource):
-    display: Projector
+    display: VlcProjector
     lighting: Lighting

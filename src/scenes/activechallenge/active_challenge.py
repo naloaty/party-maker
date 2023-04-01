@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QDialog
 
 from system.scene import Scene, action
 from system.services.lighting import Light
-from system.services.projector import Media, Projector
+from system.services.projector import Media, VlcProjector
 from .active_challenge_ui import Ui_ActiveChallenge
 
 USUAL_GAME = Media("D:/NotGames/Обычное испытание.mp4")
@@ -107,7 +107,7 @@ class ActiveChallenge(Scene, QDialog):
         self.ui.btn_success.setEnabled(False)
 
         if not final and timeout:
-            asyncio.create_task(Projector().play(FAILURE))
+            asyncio.create_task(VlcProjector().play(FAILURE))
             await asyncio.sleep(1)
             stage.lighting.set(Light(  # failure: red
                 Light.Type.COLOR, hue=0, saturation=100, brightness=100))
@@ -119,14 +119,14 @@ class ActiveChallenge(Scene, QDialog):
         stage.display.pause()
         stage.lighting.set(Light(  # success: gold
             Light.Type.COLOR, hue=41, saturation=27, brightness=100))
-        await asyncio.create_task(Projector().play(SUCCESS))
+        await asyncio.create_task(VlcProjector().play(SUCCESS))
         await asyncio.sleep(8)
 
     @action(game_finished)
     async def game_failed(self):
         stage = self.context.get_stage()
         stage.display.pause()
-        asyncio.create_task(Projector().play(FAILURE))
+        asyncio.create_task(VlcProjector().play(FAILURE))
         stage.lighting.set(Light(  # failure: red
             Light.Type.COLOR, hue=0, saturation=100, brightness=100))
         await asyncio.sleep(8)

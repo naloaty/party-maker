@@ -3,7 +3,7 @@ import asyncio
 from typing import Type, List, TYPE_CHECKING
 from PyQt6.QtCore import QObject, pyqtSignal
 from settings import bulb_settings
-from system.services.projector import Projector
+from system.services.projector import VlcProjector
 from system.misc.exceptions import IllegalState
 from system.services.lighting import Lighting
 from .action_executor import ActionExecutor
@@ -20,7 +20,7 @@ class SceneManager(QObject):
     _auto_inc: int = 0
     _scenes: dict[int, SceneContext] = dict()
     _action_executor: ActionExecutor
-    _display: Projector
+    _display: VlcProjector
     _lighting: Lighting
 
     scene_state_changed: pyqtSignal = pyqtSignal(int)
@@ -28,7 +28,7 @@ class SceneManager(QObject):
     def __init__(self):
         super().__init__()
         self._action_executor = ActionExecutor(self)
-        self._display = Projector()
+        self._display = VlcProjector()
         self._lighting = Lighting(**bulb_settings)
         self._display.placeholder()
 

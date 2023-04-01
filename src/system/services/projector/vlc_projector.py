@@ -1,7 +1,6 @@
-import sys
-from dataclasses import dataclass
-from pathlib import Path
 import asyncio
+import sys
+from pathlib import Path
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt
@@ -11,12 +10,7 @@ from vlc import Instance, EventType, Event
 from system.services.projector.projector_ui import Ui_MediaDisplay
 
 
-@dataclass
-class Media:
-    path: str
-
-
-class Projector(QDialog):
+class VlcProjector(QDialog):
     fullscreen: bool = False
 
     def __init__(self):
@@ -51,7 +45,7 @@ class Projector(QDialog):
         self._player.play()
 
     def init_frame(self):
-        if sys.platform.startswith('linux'):  # for Linux using the X Server
+        if sys.platform.startswith("linux"):  # for Linux using the X Server
             self._player.set_xwindow(self.ui.videoframe.winId())
         elif sys.platform == "win32":  # for Windows
             self._player.set_hwnd(self.ui.videoframe.winId())
@@ -65,7 +59,7 @@ class Projector(QDialog):
         # self.showFullScreen()
         await asyncio.sleep(1)
         while self._player.is_playing():
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
     def reset(self):
         self._position_locks.clear()

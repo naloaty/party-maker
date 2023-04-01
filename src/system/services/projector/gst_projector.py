@@ -1,0 +1,3 @@
+
+class GstProjector:
+    pass
